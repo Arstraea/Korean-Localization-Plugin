@@ -1,0 +1,143 @@
+using System;
+using System.Reflection;
+using System.Runtime.CompilerServices;
+using System.Windows.Forms;
+
+namespace Arstraea.KoreanPatch.Input
+{
+    // 표준 EDIT/TextBox는 자체 문서와 IME 편집 상태를 갖는다. 게임 표시만 갱신하고
+    // 그 편집 메시지를 가로채면 Windows가 보는 문서와 실제 입력창이 어긋날 수 있다.
+    // 편집 기능이 없는 창으로 IMM 메시지를 받고 게임의 기존 입력 큐에 전달한다.
+    //
+    // A native EDIT owns a document and IME editing state. Intercepting its edits
+    // while updating only the game can desynchronize that document. Receive IMM
+    // messages on a non-editing control and retain the game's existing input queue.
+    internal sealed class ImeReceiver : Control
+    {
+        internal delegate bool MessageHandler(ref Message message);
+        private static readonly ConditionalWeakTable<Control, ImeReceiver> receivers = new ConditionalWeakTable<Control, ImeReceiver>();
+        private static PropertyInfo processorInstance;
+        private static MethodInfo processorWndProc;
+        private readonly MessageHandler handler;
+
+        internal ImeReceiver(MessageHandler handler)
+        {
+            this.handler = handler;
+            SetStyle(ControlStyles.Selectable, true);
+            TabStop = false;
+        }
+
+        internal static void Configure(PropertyInfo instance, MethodInfo wndProc)
+        {
+            processorInstance = instance;
+            processorWndProc = wndProc;
+        }
+
+        internal static Control ExistingOrOriginal(Control original)
+        {
+            ImeReceiver receiver;
+            return original != null && receivers.TryGetValue(original, out receiver) ? receiver : original;
+        }
+
+        internal static Control GetOrCreate(Control original)
+        {
+            ImeReceiver receiver;
+            if (receivers.TryGetValue(original, out receiver)) return receiver;
+            if (original.Parent == null || processorInstance == null) return original;
+            object processor = processorInstance.GetValue(null);
+            if (processor == null) return original;
+            var callback = (MessageHandler)Delegate.CreateDelegate(typeof(MessageHandler), processor, processorWndProc);
+            receiver = new ImeReceiver(callback) { Bounds = original.Bounds, ImeMode = ImeMode.Disable };
+            // 기존 컨트롤의 자체 포커스 회수를 끄고, 새 창은 같은 부모 수명으로 관리한다.
+            //
+            // Disable the old receiver's auto-focus; the new child shares its parent's lifetime.
+            original.GetType().GetProperty("AutoFocusing")?.SetValue(original, false);
+            original.TabStop = false;
+            original.ImeMode = ImeMode.Disable;
+            original.Parent.Controls.Add(receiver);
+            receivers.Add(original, receiver);
+            ImeHealthProbe.Attach(receiver);
+            ImeDiagnostics.Record("plain-receiver-created", health: true);
+            return receiver;
+        }
+
+        protected override bool IsInputKey(Keys keyData) { return true; }
+
+        protected override void OnKeyDown(KeyEventArgs e)
+        {
+            // Enter의 WM_CHAR는 엔진이 KeypressEnter로 큐에 넣어 여러 줄 편집의 줄바꿈을 만든다.
+            // 여러 줄 편집만 Return을 허용한다. 한 줄 입력은 키 이벤트로 확인/전송하므로 중복을 막는다.
+            //
+            // Enter's WM_CHAR queues engine KeypressEnter for multiline editing. Single-line
+            // controls accept/send via physical key events; keep suppressing their duplicate character.
+            if (e.Control || e.KeyCode == Keys.Tab || e.KeyCode == Keys.Escape
+                || (e.KeyCode == Keys.Return && !ImeControlPolicy.AllowsLineBreak))
+                e.SuppressKeyPress = true;
+            base.OnKeyDown(e);
+        }
+
+        protected override void WndProc(ref Message message)
+        {
+            if (!ImeDiagnostics.WantsDetail)
+            {
+                ProcessNativeMessage(ref message);
+                return;
+            }
+            int kind = message.Msg;
+            bool traced = kind == 0x010d || kind == 0x010e || kind == 0x010f || kind == 0x0288;
+            long started = System.Diagnostics.Stopwatch.GetTimestamp();
+            long origin = traced ? ImeDiagnostics.Record("receiver-dispatch-enter", flags: kind,
+                metadata: "receiver=" + ImeHealthProbe.Id(this)) : 0;
+            try { ProcessNativeMessage(ref message); }
+            finally
+            {
+                long elapsed = (System.Diagnostics.Stopwatch.GetTimestamp() - started) * 1000 / System.Diagnostics.Stopwatch.Frequency;
+                if (traced || elapsed >= 100)
+                    ImeDiagnostics.Record("receiver-dispatch-exit", flags: kind, origin: origin,
+                        metadata: "elapsedMs=" + elapsed + " receiver=" + ImeHealthProbe.Id(this));
+            }
+        }
+
+        private void ProcessNativeMessage(ref Message message)
+        {
+            ImeBootstrap.ObserveNativeMessage(this, ref message);
+            int kind = message.Msg;
+            if (kind == 0x0104) return; // Preserve the game's WM_SYSKEYDOWN handling.
+            if (handler != null && (kind == 7 || kind == 0x0102 || kind == 0x010d || kind == 0x010e
+                || kind == 0x010f || kind == 0x0286 || kind == 0x0051))
+            {
+                handler(ref message);
+                // 게임이 조합을 직접 그리므로 START도 여기서 처리 완료한다.
+                // START를 기본 처리에 넘기면 기본 IME 조합창까지 열도록 요청하게 된다.
+                // 종료의 자원 정리와 컨텍스트/요청은 기본 Control 경로를 유지한다.
+                //
+                // Own START as well as text: default START asks the system IME to open
+                // its composition window even though the game already renders preedit.
+                // Preserve default end cleanup, context and request processing.
+                if (kind == 0x0102 || kind == 0x010d || kind == 0x010f || kind == 0x0286)
+                {
+                    message.Result = IntPtr.Zero;
+                    return;
+                }
+            }
+            if (kind == 0x0281)
+            {
+                IntPtr flags = message.LParam;
+                message.LParam = new IntPtr(flags.ToInt64() & ~0x80000000L);
+                try { base.WndProc(ref message); }
+                finally { message.LParam = flags; }
+                return;
+            }
+            base.WndProc(ref message);
+            // 영문 레이아웃에서 활성화한 뒤 Win+Space로 한국어로 돌아온 경우도 반각을 유지한다.
+            //
+            // Keep half-width mode when a receiver activated in English switches to Korean.
+            if (kind == 0x0051 && NativeIme.IsKoreanLayout() && ImeMode != ImeMode.Disable)
+            {
+                int conversion;
+                if (NativeIme.TryGetConversion(Handle, out conversion))
+                    ImeMode = ImeControlPolicy.HalfWidthMode(conversion);
+            }
+        }
+    }
+}
