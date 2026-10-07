@@ -15,3 +15,6 @@ if (-not (Test-Path -LiteralPath (Join-Path $gameBin 'VRage.Platform.Windows.dll
 # Build the public source without deploying to a user's installation.
 & dotnet build (Join-Path $PSScriptRoot 'KoreanPatch.csproj') -c Release --nologo "-p:GameBinPath=$gameBin" "-p:HarmonyPath=$harmonyFile" "-p:CecilPath=$cecilFile"
 if ($LASTEXITCODE -ne 0) { throw 'Plugin build failed.' }
+if (Test-Path -LiteralPath (Join-Path $PSScriptRoot 'Assets/PluginVersion.xml')) {
+    Copy-Item -LiteralPath (Join-Path $PSScriptRoot 'Assets/PluginVersion.xml') -Destination (Join-Path $PSScriptRoot 'bin/Release/net48/PluginVersion.xml') -Force
+}

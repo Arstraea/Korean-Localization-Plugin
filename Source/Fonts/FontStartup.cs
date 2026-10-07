@@ -20,6 +20,7 @@ namespace Arstraea.KoreanPatch.Fonts
         internal static bool HidePlatformIcons = true;
         internal static Localization.TranslationInstaller.Result TranslationResult { get; private set; }
         internal static string PackageFolder { get; private set; }
+        internal static string ContentFolder { get; private set; }
         private static bool attempted;
         internal static string SettingsPath => PluginSettings.PathForSettings;
 
@@ -41,6 +42,7 @@ namespace Arstraea.KoreanPatch.Fonts
                 ui = new PatchSession();
                 string bin = (string)configType.GetProperty("GameDir").GetValue(config);
                 string content = GetContentPath(bin);
+                ContentFolder = content;
                 LoadSettings();
                 stage = PatchStage.Workshop;
                 ui.Publish(PatchView.Working(stage));

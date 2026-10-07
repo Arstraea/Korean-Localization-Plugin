@@ -8,8 +8,9 @@ Steam 창작마당의 [Korean Localization Pack 한글화 팩](https://steamcomm
 - 영어 UI에서도 한글 입력을 사용할 수 있습니다.
 - 한/영 입력 상태 기억 방식과 스크립트 코드 편집기의 한글 입력 제한을 설정할 수 있습니다.
 - TextHudAPI · RichHudMaster · Build Info에 한글 폰트를 보충합니다.
+- 메인 메뉴에서 적용된 한글화 팩과 플러그인의 업데이트 내역을 확인할 수 있습니다.
 
-현재 버전은 **0.5.0 배포 준비본**이며 PluginHub 등록 신청은 아직 진행하지 않았습니다.
+현재 버전은 **1.0.0**입니다. PluginHub 등록 신청은 검토 중입니다.
 
 ## Requirements
 
@@ -30,6 +31,8 @@ Pulsar의 소스 빌드 대상은 `Source/`입니다. 폰트 이미지와 번역
 ```
 
 결과물은 `bin/Release/net48/`에 생성됩니다. 사용자 설치 폴더로 자동 복사하지 않습니다.
+
+플러그인 뉴스는 소스 문자열로 DLL 안에 포함됩니다. `Assets/PluginVersion.xml`과 출력 폴더의 `PluginVersion.xml`은 같은 내용을 확인할 기록이며, 직접 DLL을 설치할 때도 XML을 복사할 필요가 없습니다. 일반 플러그인 소개용 XML도 필요하지 않습니다.
 
 ## Support
 

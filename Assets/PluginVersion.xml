@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<KoreanPatchRelease schemaVersion="1">
+  <Version>1.0.0</Version>
+  <PublishedAt>2026-10-07</PublishedAt>
+  <Introduction>게임 설정에서 언어를 "한국어"로 변경하세요!</Introduction>
+  <Changes>
+    <Change>한글 입력 지원 + 한/영 입력 상태 기억 옵션 제공</Change>
+    <Change>TextHudAPI · RichHudMaster · Build Info 한글 폰트 자동 추가</Change>
+  </Changes>
+</KoreanPatchRelease>

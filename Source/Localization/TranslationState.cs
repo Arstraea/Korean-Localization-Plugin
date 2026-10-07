@@ -14,7 +14,7 @@ namespace Arstraea.KoreanPatch.Localization
     // cannot erase it. Never persist a second translation catalog here.
     internal sealed class TranslationState
     {
-        internal string LastSeenVersion, InstalledVersion, LastNotifiedVersion;
+        internal string LastSeenVersion, InstalledVersion, LastNotifiedVersion, LastConfirmedPluginVersion;
 
         internal static string PathFor(string content)
         {
@@ -33,7 +33,8 @@ namespace Arstraea.KoreanPatch.Localization
                 if (root.Name != "KoreanPatchTranslationState" || (string)root.Attribute("schemaVersion") != "1")
                     throw new InvalidDataException("Unsupported translation state schema.");
                 return new TranslationState { LastSeenVersion = Value(root, "LastSeenVersion"),
-                    InstalledVersion = Value(root, "InstalledVersion"), LastNotifiedVersion = Value(root, "LastNotifiedVersion") };
+                    InstalledVersion = Value(root, "InstalledVersion"), LastNotifiedVersion = Value(root, "LastNotifiedVersion"),
+                    LastConfirmedPluginVersion = Value(root, "LastConfirmedPluginVersion") };
             }
             catch (Exception error) when (ReleaseMetadata.IsFileError(error))
             { notes.Add("Translation version state could not be read: " + error.Message); return new TranslationState(); }
@@ -43,8 +44,8 @@ namespace Arstraea.KoreanPatch.Localization
             && string.Equals(InstalledVersion, release.Version, StringComparison.Ordinal)
             && !string.Equals(LastNotifiedVersion, release.Version, StringComparison.Ordinal);
 
-        // 후속 UI는 실제로 안내한 뒤에만 이 값을 저장해야 한다. 현재 실행 경로에서는 호출하지 않는다.
-        // A future UI must save this only after presentation; current startup never calls it.
+        // 확인 버튼만 기록한다. 표시·스크롤·게임 뉴스로 전환은 확인이 아니다.
+        // Only explicit confirmation records this; presentation, scrolling and toggling do not.
         internal void MarkNotified(ReleaseMetadata release)
         { if (HasPendingNews(release)) LastNotifiedVersion = release.Version; }
 
@@ -56,11 +57,14 @@ namespace Arstraea.KoreanPatch.Localization
                 var root = new XElement("KoreanPatchTranslationState", new XAttribute("schemaVersion", "1"),
                     new XElement("LastSeenVersion", LastSeenVersion ?? ""), new XElement("InstalledVersion", InstalledVersion ?? ""),
                     new XElement("LastNotifiedVersion", LastNotifiedVersion ?? ""));
+                if (LastConfirmedPluginVersion != null)
+                    root.Add(new XElement("LastConfirmedPluginVersion", LastConfirmedPluginVersion));
                 string xml = root.ToString();
                 if (File.Exists(path) && File.ReadAllText(path) == xml) return;
                 // 새 메타데이터가 없으면 비어 있는 추적 파일을 굳이 만들지 않는다.
                 // Older packages need no empty bookkeeping file.
-                if (!File.Exists(path) && LastSeenVersion == null && InstalledVersion == null && LastNotifiedVersion == null) return;
+                if (!File.Exists(path) && LastSeenVersion == null && InstalledVersion == null && LastNotifiedVersion == null
+                    && LastConfirmedPluginVersion == null) return;
                 temporary = FilePaths.Temporary(path);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));
                 File.WriteAllText(temporary, xml, new UTF8Encoding(false));
