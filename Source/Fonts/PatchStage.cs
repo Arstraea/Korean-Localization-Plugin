@@ -2,9 +2,9 @@ using System;
 
 namespace Arstraea.KoreanPatch.Fonts
 {
-    // AUTO_PATCH_FLOW.md의 단계 번호와 제목을 사용한다. 내부 함수 호출 수가 아니다.
+    // SPECIFICATION.md의 단계 번호와 제목을 사용한다. 내부 함수 호출 수가 아니다.
     //
-    // Match AUTO_PATCH_FLOW.md stages, not the number of internal function calls.
+    // Match SPECIFICATION.md stages, not the number of internal function calls.
     internal enum PatchStage
     {
         Paths = 1,
