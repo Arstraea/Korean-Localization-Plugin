@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.Runtime.CompilerServices;
 using System.Text;
@@ -72,20 +73,13 @@ namespace Arstraea.KoreanPatch.Gui
             bool vanilla = vanillaEditor == null ? PluginSettings.Current.VanillaScriptEditor : vanillaEditor.IsChecked;
             base.RecreateControls(constructor);
             AddCaption(Plugin.DisplayTitle, captionScale: 0.75f);
-            Heading("한글 입력 지원 관련 설정", InputHeading);
-            const string languageHelp = "입력창을 열 때 사용할 한/영 상태를 기억할 방식을 선택하세요.\n"
-                + "게임에서 사용하는 UI 표시 언어와 별개로 작동합니다.\n"
-                + "* 기억한 상태가 없는 최초 입력은 영어 상태로 간주합니다.\n"
-                + "* 상태 기억은 게임 단위로 임시 저장되어 월드 입장과 퇴장 시 초기화됩니다.\n"
-                + "* 옵션 변경 시 바로 다음 입력창 진입부터 적용됩니다.";
-            var languageLabel = Label("한/영 입력 상태 기억 방식", LanguageRow, 0.78f);
+            Heading(KoreanText.InputSettingsHeading, InputHeading);
+            const string languageHelp = KoreanText.InputLanguageTooltip;
+            var languageLabel = Label(KoreanText.InputLanguageLabel, LanguageRow, 0.78f);
             languageLabel.Position += new Vector2(Indent, 0f);
             languageLabel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
             languageLabel.SetToolTip(languageHelp);
-            const string editorHelp = "스크립트 코드 편집기에서는 기존 게임처럼 한글 입력이 되지 않도록 막습니다.\n"
-                + "* 기존처럼 붙여넣기로 넣는 한글 입력은 가능합니다.\n"
-                + "* 한글 입력으로 스크립트가 망가지는 걸 방지하기 위한 기능으로,\n"
-                + "  오직 스크립트 코드 편집기에서만 적용되는 기능입니다.";
+            const string editorHelp = KoreanText.ScriptEditorInputTooltip;
             vanillaEditor = new MyGuiControlCheckbox(position: new Vector2(0.29f, EditorRow), isChecked: vanilla, toolTip: editorHelp);
             // 설명과 선택은 한 줄로 배치하고 입력 컨트롤의 오른쪽 끝을 체크박스와 맞춘다.
             //
@@ -94,21 +88,21 @@ namespace Arstraea.KoreanPatch.Gui
             inputLanguage = new MyGuiControlCombobox(position: new Vector2(valueRight, LanguageRow),
                 size: new Vector2(valueRight - ValueLeft, 0.04f), isAutoscaleEnabled: true, minTextScale: 0.48f);
             inputLanguage.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_CENTER;
-            inputLanguage.AddItem(0, new StringBuilder("이전 한/영 입력 상태 기억"));
-            inputLanguage.AddItem(1, new StringBuilder("입력창별 한/영 입력 상태 기억"));
-            inputLanguage.AddItem(2, new StringBuilder("채팅창에선 한/영 입력 상태 기억  |  그 외엔 항상 영어로 입력 시작"));
-            inputLanguage.AddItem(3, new StringBuilder("모든 곳에서 항상 영어로 입력 시작"));
+            inputLanguage.AddItem(0, new StringBuilder(KoreanText.RememberPreviousInput));
+            inputLanguage.AddItem(1, new StringBuilder(KoreanText.RememberEachInput));
+            inputLanguage.AddItem(2, new StringBuilder(KoreanText.EnglishExceptChat));
+            inputLanguage.AddItem(3, new StringBuilder(KoreanText.AlwaysEnglish));
             inputLanguage.SelectItemByKey(language);
             inputLanguage.SetToolTip(languageHelp);
             Controls.Add(inputLanguage);
-            var editorLabel = Label("스크립트 코드 편집기에서 한글 입력 무시", EditorRow, 0.72f);
+            var editorLabel = Label(KoreanText.ScriptEditorInputLabel, EditorRow, 0.72f);
             editorLabel.Position += new Vector2(Indent, 0f);
             editorLabel.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
             editorLabel.SetToolTip(editorHelp);
             Controls.Add(vanillaEditor);
-            Heading("폰트 설정", FontHeading);
-            const string iconHelp = "채팅 등에서 이름 옆에 표시되는 플랫폼 아이콘을 숨깁니다.\n* 변경 후 게임을 재시작해야 적용됩니다.";
-            var option = Label("플랫폼 아이콘 숨기기 (재시작 필요)", FontRow, 0.78f);
+            Heading(KoreanText.FontSettingsHeading, FontHeading);
+            const string iconHelp = KoreanText.HidePlatformIconsTooltip;
+            var option = Label(KoreanText.HidePlatformIconsLabel, FontRow, 0.78f);
             option.Position += new Vector2(Indent, 0f);
             option.OriginAlign = MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER;
             option.SetToolTip(iconHelp);
@@ -116,7 +110,7 @@ namespace Arstraea.KoreanPatch.Gui
                 isChecked: selected, toolTip: iconHelp);
             Controls.Add(hideIcons);
 
-            float logRuleY = Heading("이번 실행 관련 로그", LogHeading);
+            float logRuleY = Heading(KoreanText.RunLogsHeading, LogHeading);
 
             var details = new MyGuiControlMultilineText(position: new Vector2(Left + Indent, LogTop),
                 size: new Vector2(valueRight - Left - Indent, FooterSeparator - LogBottomGap - LogTop), font: "White", textScale: 0.58f,
@@ -144,7 +138,7 @@ namespace Arstraea.KoreanPatch.Gui
             // right-anchor it so hover/text updates retain the common value-column edge.
             var copy = new MyGuiControlButton(position: copyPosition,
                 visualStyle: MyGuiControlButtonStyleEnum.Small, buttonScale: 0.65f,
-                text: new StringBuilder("내역 복사"), textScale: 0.45f,
+                text: new StringBuilder(KoreanText.CopyDetails), textScale: 0.45f,
                 originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_CENTER,
                 onButtonClick: CopyPreparationReport);
             Controls.Add(copy);
@@ -159,10 +153,10 @@ namespace Arstraea.KoreanPatch.Gui
             separator.AddHorizontal(new Vector2(Left, FooterSeparator), Width);
             Controls.Add(separator);
             var save = new MyGuiControlButton(position: new Vector2(-0.14f, 0.35f),
-                text: new StringBuilder("저장"), textScale: 0.72f, onButtonClick: Save);
+                text: new StringBuilder(KoreanText.Save), textScale: 0.72f, onButtonClick: Save);
             Controls.Add(save);
             Controls.Add(new MyGuiControlButton(position: new Vector2(0.14f, 0.35f),
-                text: new StringBuilder("취소"), textScale: 0.72f,
+                text: new StringBuilder(KoreanText.Cancel), textScale: 0.72f,
                 onButtonClick: button => CloseScreen()));
             FocusedControl = inputLanguage;
         }
@@ -207,7 +201,7 @@ namespace Arstraea.KoreanPatch.Gui
                 MyLog.Default.WriteLine("[Arstraea.KoreanPatch] Settings save failed: " + error);
                 MyGuiSandbox.AddScreen(MyGuiSandbox.CreateMessageBox(
                     messageCaption: new StringBuilder(Plugin.DisplayName),
-                    messageText: new StringBuilder("설정 저장에 실패했습니다.\n\n" + error.Message)));
+                    messageText: new StringBuilder(string.Format(KoreanText.SettingsSaveFailed, error.Message))));
                 return;
             }
             CloseScreen();
@@ -219,12 +213,12 @@ namespace Arstraea.KoreanPatch.Gui
             {
                 PreparationReport.Copy(preparationReport);
                 copyFeedback.ColorMask = Vector4.One;
-                copyFeedback.Text = "로그를 복사했습니다.";
+                copyFeedback.Text = KoreanText.LogsCopied;
             }
             catch (Exception error)
             {
                 copyFeedback.ColorMask = CopyErrorColor;
-                copyFeedback.Text = "로그 복사에 실패했습니다. 다시 시도해 주세요.";
+                copyFeedback.Text = KoreanText.LogsCopyFailed;
                 MyLog.Default.WriteLine("[Arstraea.KoreanPatch] Preparation report copy failed: " + error);
             }
         }

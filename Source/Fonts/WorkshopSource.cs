@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.IO;
 using System.Reflection;
@@ -73,7 +74,7 @@ namespace Arstraea.KoreanPatch.Fonts
             if (downloadError != 0)
             {
                 EnsureConnected();
-                throw new PatchPreparationException("Steam이 한글화 팩 다운로드를 완료하지 못했습니다. Steam 다운로드 상태와 인터넷 연결을 확인한 뒤 다시 실행해 주세요.\nSteam 결과 코드: " + downloadError);
+                throw new PatchPreparationException(string.Format(KoreanText.SteamDownloadFailed, downloadError));
             }
             var value = new WorkshopSnapshot { Flags = (uint)state.Invoke(null, new[] { id }), AwaitingResult = awaiting };
             if ((!requireSubscription || value.Subscribed) && value.Installed && (value.Flags & (8 | 16 | 32)) == 0 && !awaiting)
@@ -82,7 +83,7 @@ namespace Arstraea.KoreanPatch.Fonts
                 if (!(bool)install.Invoke(null, args) || string.IsNullOrWhiteSpace(args[2] as string))
                 {
                     EnsureConnected();
-                    throw new PatchPreparationException("Steam에서 한글화 팩의 다운로드 위치를 확인하지 못했습니다. 다운로드 완료를 확인한 뒤 다시 실행해 주세요.");
+                    throw new PatchPreparationException(KoreanText.SteamDownloadLocationMissing);
                 }
                 value.Folder = Path.GetFullPath((string)args[2]);
                 value.Timestamp = (uint)args[4];
@@ -111,10 +112,10 @@ namespace Arstraea.KoreanPatch.Fonts
             catch (Exception error)
             {
                 while (error is TargetInvocationException && error.InnerException != null) error = error.InnerException;
-                throw new PatchPreparationException("Steam 연결 상태를 확인할 수 없어 한글화 팩 다운로드 대기를 계속할 수 없습니다.\n\nSteam 실행·로그인 상태를 확인하고 게임과 Pulsar를 다시 실행해 주세요.", error);
+                throw new PatchPreparationException(KoreanText.SteamConnectionCheckFailed, error);
             }
             if (!connected)
-                throw new PatchPreparationException("Steam 연결 상태를 확인할 수 없어 한글화 팩 다운로드 대기를 계속할 수 없습니다.\n\nSteam이 오프라인 모드라면 온라인으로 전환하고, 로그인과 인터넷 연결을 확인한 뒤 게임과 Pulsar를 다시 실행해 주세요.");
+                throw new PatchPreparationException(KoreanText.SteamOffline);
         }
 
         public void RequestDownload()
@@ -137,7 +138,7 @@ namespace Arstraea.KoreanPatch.Fonts
             {
                 awaiting = false;
                 EnsureConnected();
-                throw new PatchPreparationException("Steam이 한글화 팩 다운로드 요청을 받지 못했습니다. Steam 로그인과 다운로드 상태를 확인한 뒤 다시 실행해 주세요.");
+                throw new PatchPreparationException(KoreanText.SteamDownloadRequestFailed);
             }
         }
 

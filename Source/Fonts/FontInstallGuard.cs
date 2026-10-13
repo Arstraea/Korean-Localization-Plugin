@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.IO;
 using System.Security.Cryptography;
@@ -31,7 +32,7 @@ namespace Arstraea.KoreanPatch.Fonts
                 guard.mutex = new Mutex(false, @"Global\Arstraea.KoreanPatch.Fonts." + key);
                 try { guard.acquired = guard.mutex.WaitOne(0); }
                 catch (AbandonedMutexException) { guard.acquired = true; }
-                if (!guard.acquired) throw new PatchPreparationException("다른 실행에서 같은 게임의 한글패치 폰트를 준비하고 있습니다.\n\n다른 게임 또는 Pulsar 실행을 종료한 뒤 다시 시도해 주세요.");
+                if (!guard.acquired) throw new PatchPreparationException(KoreanText.PreparationBusy);
 
                 // 이전 빌드 또는 진단 도구가 이미 만든 잠금은 존중하되 새로 만들지 않는다.
                 // Honor an existing legacy/diagnostic lock without creating one.

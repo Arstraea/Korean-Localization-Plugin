@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.Drawing;
 using System.Windows.Forms;
@@ -19,13 +20,13 @@ namespace Arstraea.KoreanPatch.Fonts
             DoubleBuffered = true;
             BackColor = Color.FromArgb(65, 65, 65);
             ForeColor = Color.FromArgb(0x5C, 0xD1, 0xE5);
-            AccessibleName = "패치 작업 진행";
+            AccessibleName = KoreanText.ProgressAccessibleName;
             AccessibleRole = AccessibleRole.ProgressBar;
         }
         internal void Advance()
         {
             position = (position + 12) % Math.Max(1, Width + Width / 4);
-            AccessibleDescription = Indeterminate ? "진행률 확인 중" : Percent + "%";
+            AccessibleDescription = Indeterminate ? KoreanText.ProgressUnknown : Percent + "%";
             Invalidate();
         }
         protected override void OnPaint(PaintEventArgs args)

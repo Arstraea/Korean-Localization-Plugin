@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 
 namespace Arstraea.KoreanPatch.Fonts
@@ -33,7 +34,7 @@ namespace Arstraea.KoreanPatch.Fonts
                     int interval = package.Subscribed ? 1000 : 5000;
                     ui.Publish(PatchView.Waiting(package, elapsed() + TimeSpan.FromMilliseconds(interval)));
                     if (elapsed() - waitStarted >= WaitLimit)
-                        throw new PatchPreparationException("한글화 팩 자료 다운로드를 오래 기다렸지만 완료되지 않았습니다.\n\nSteam에서 구독·다운로드 상태를 확인하고 잠시 후 다시 실행해 주세요.");
+                        throw new PatchPreparationException(KoreanText.DownloadTimedOut);
                     if (package.Subscribed && !requested)
                     {
                         source.RequestDownload();
@@ -55,8 +56,8 @@ namespace Arstraea.KoreanPatch.Fonts
                 catch (WorkshopChangedException)
                 {
                     if (attempt + 1 == MaxPreparations)
-                        throw new PatchPreparationException("패치 준비 중 한글화 팩 자료가 반복해서 바뀌어 적용을 중단했습니다. Steam 업데이트가 완료된 뒤 다시 실행해 주세요.");
-                    ui.Publish(PatchView.Working(PatchStage.Workshop, "한글화 팩 자료가 갱신되어 최신 상태를 다시 확인합니다."));
+                        throw new PatchPreparationException(KoreanText.PackChangedRepeatedly);
+                    ui.Publish(PatchView.Working(PatchStage.Workshop, KoreanText.PackChanged));
                 }
             }
             throw new InvalidOperationException("Preparation attempt limit exceeded.");
@@ -83,30 +84,30 @@ namespace Arstraea.KoreanPatch.Fonts
 
         internal static PatchView Working(PatchStage stage, string message = null) => new PatchView
         {
-            Stage = stage, Message = message ?? "패치를 준비하고 있습니다.",
-            Guidance = "현재 작업이 끝나면 자동으로 다음 단계로 진행합니다.\n\n종료를 누르면 적용·복구 중인 작업을 마친 뒤 게임 실행을 종료합니다."
+            Stage = stage, Message = message ?? KoreanText.PreparingPatch,
+            Guidance = KoreanText.WorkingGuidance
         };
 
         internal static PatchView Waiting(WorkshopSnapshot item, TimeSpan nextCheck = default(TimeSpan)) => new PatchView
         {
             Stage = PatchStage.Workshop, Download = item, NextCheck = nextCheck,
-            Message = !item.Subscribed ? "Steam 창작마당에서 한글화 팩 구독이 필요합니다." : item.Downloading
-                ? (item.Installed ? "한글화 팩을 최신 자료로 업데이트하고 있습니다." : "Steam 다운로드가 완료되기를 기다리고 있습니다.")
-                : "Steam 다운로드가 완료되기를 기다리고 있습니다.",
+            Message = !item.Subscribed ? KoreanText.SubscriptionRequired : item.Downloading
+                ? (item.Installed ? KoreanText.UpdatingPack : KoreanText.WaitingForDownload)
+                : KoreanText.WaitingForDownload,
             Guidance = (!item.Subscribed
-                ? "아래 버튼으로 한글화 팩 창작마당 페이지를 열어 [구독]을 눌러 주세요.\n\n구독 여부를 자동으로 확인하고 다운로드가 완료되면 한글패치 적용을 시작합니다."
-                : "Steam의 한글화 팩 다운로드 상태를 자동으로 확인하고 있습니다.\n\n진행되지 않으면 Steam 다운로드 목록과 인터넷 연결을 확인해 주세요.")
-                + "\n\n한글화 팩 다운로드는 최대 10분 동안 기다립니다."
+                ? KoreanText.SubscriptionGuidance
+                : KoreanText.DownloadGuidance)
+                + KoreanText.DownloadWaitLimit
         };
 
         internal static PatchView Error(PatchFailure failure) => new PatchView
-        { Stage = failure.Stage, Failure = failure, Message = "한글패치 준비가 정상적으로 완료되지 않았습니다.", Guidance = failure.Guidance };
+        { Stage = failure.Stage, Failure = failure, Message = KoreanText.PreparationFailed, Guidance = failure.Guidance };
 
         internal static PatchView Completed(TimeSpan? launchAt = null) => new PatchView
         {
             Stage = PatchStage.Launch, IsComplete = true, LaunchAt = launchAt,
-            Message = "한글패치 준비가 완료되었습니다.",
-            Guidance = "필요한 자료 확인과 폰트·번역 준비가 문제 없이 완료되었습니다."
+            Message = KoreanText.PreparationComplete,
+            Guidance = KoreanText.PreparationCompleteGuidance
         };
     }
 }

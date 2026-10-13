@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.Diagnostics;
 using System.Threading;
@@ -48,7 +49,7 @@ namespace Arstraea.KoreanPatch.Fonts
         public void CheckRequests()
         {
             if (ExitRequested) throw new OperationCanceledException("User requested cancellation of game launch.");
-            if (StopRequested) throw new PatchPreparationException("사용자가 한글화 팩 다운로드 대기를 중단했습니다.\n\nSteam에서 구독·다운로드를 완료한 뒤 다시 실행해 주세요.");
+            if (StopRequested) throw new PatchPreparationException(KoreanText.DownloadWaitStopped);
         }
 
         internal void RequestRefresh() => wake.Set();

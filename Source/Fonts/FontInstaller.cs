@@ -17,31 +17,36 @@ namespace Arstraea.KoreanPatch.Fonts
         {
             internal int ChangedXml, CopiedImages, HangulCount;
             internal bool OriginalIconsUnavailable;
+            internal string FontsFolder;
         }
         private sealed class Plan
         {
             internal string Family, Target;
-            internal byte[] Before;
+            internal byte[] Before, GameBefore;
             internal FontMerge.Result Merged;
         }
 
         internal static Result Apply(string contentPath, string workshopPath, bool hideIcons,
-            Action beforeCommit = null, Action<int> afterReplace = null, Action<PatchStage> progress = null)
+            Action beforeCommit = null, Action<int> afterReplace = null, Action<PatchStage> progress = null,
+            string cacheFolder = null)
         {
             progress?.Invoke(PatchStage.AccessAndRecovery);
-            string fonts = Path.GetFullPath(Path.Combine(contentPath, "Fonts"));
+            string originalFonts = Path.GetFullPath(Path.Combine(contentPath, "Fonts"));
+            cacheFolder = Path.GetFullPath(cacheFolder ?? PluginPaths.CacheFor(contentPath));
+            PluginPaths.RequireExternal(contentPath, cacheFolder);
+            string fonts = Path.Combine(cacheFolder, "Fonts");
             string transaction = Path.Combine(fonts, "KoreanPatch-Transaction");
             foreach (string family in Families) FilePaths.Read(Path.Combine(fonts, family, "FontDataPA.xml"));
             RejectLinks(fonts);
             foreach (string family in Families) RejectLinks(Path.Combine(fonts, family));
-            if (!Directory.Exists(fonts)) throw new DirectoryNotFoundException("Game font folder is unavailable.");
-            using (var guard = FontInstallGuard.Acquire(fonts))
+            if (!Directory.Exists(originalFonts)) throw new DirectoryNotFoundException("Game font folder is unavailable.");
+            using (var guard = FontInstallGuard.Acquire(cacheFolder))
             {
                 RejectLinks(transaction);
                 Recover(fonts, transaction);
                 progress?.Invoke(PatchStage.Prepare);
                 var plans = new List<Plan>();
-                var result = new Result();
+                var result = new Result { FontsFolder = fonts };
                 var sourceImages = new Dictionary<string, byte[]>(StringComparer.OrdinalIgnoreCase);
                 foreach (string family in Families)
                 {
@@ -49,12 +54,29 @@ namespace Arstraea.KoreanPatch.Fonts
                     RejectLinks(target);
                     string sourceDirectory = Path.Combine(workshopPath, "Fonts", family);
                     RejectLinks(sourceDirectory);
-                    byte[] original = File.ReadAllBytes(FilePaths.Read(target));
+                    string gameXml = Path.Combine(originalFonts, family, "FontDataPA.xml");
+                    RejectLinks(gameXml);
+                    byte[] original = File.ReadAllBytes(FilePaths.Read(gameXml));
                     var merged = FontMerge.Merge(original, File.ReadAllBytes(FilePaths.Read(Path.Combine(sourceDirectory, "FontDataPA.xml"))),
                         name => ReadImage(sourceDirectory, name, sourceImages), hideIcons, allowSharedWhite: family == "monospace");
                     result.HangulCount += merged.HangulCount;
                     result.OriginalIconsUnavailable |= merged.OriginalIconsUnavailable;
-                    plans.Add(new Plan { Family = family, Target = target, Before = original, Merged = merged });
+                    // XML 위치가 달라져도 기존 영문 이미지는 게임에서 읽는다. 추가한
+                    // 한글 이미지만 캐시 안에 상대 경로로 두어 white/monospace가 공유한다.
+                    //
+                    // Retained glyphs use game-owned atlases; only Hangul images live in
+                    // the cache. Preserve relative white/monospace sharing there.
+                    var doc = FontMerge.Read(merged.Xml);
+                    var ns = doc.Root.Name.Namespace;
+                    foreach (var bitmap in doc.Root.Element(ns + "bitmaps").Elements())
+                    {
+                        string name = (string)bitmap.Attribute("name");
+                        if (!merged.Images.ContainsKey(name))
+                            bitmap.SetAttributeValue("name", Path.GetFullPath(Path.Combine(Path.GetDirectoryName(gameXml), name)));
+                    }
+                    merged.Xml = FontMerge.Serialize(doc);
+                    plans.Add(new Plan { Family = family, Target = target, GameBefore = original,
+                        Before = File.Exists(target) ? File.ReadAllBytes(target) : new byte[0], Merged = merged });
                 }
                 // Workshop 다운로드가 다시 시작됐다면 준비한 세트를 게시하지 않는다.
                 // Recheck Workshop readiness before publishing the prepared set.
@@ -105,7 +127,7 @@ namespace Arstraea.KoreanPatch.Fonts
                     WriteDurable(Path.Combine(transaction, plan.Family + ".after"), plan.Merged.Xml);
                 }
                 foreach (var plan in plans)
-                    if (!File.ReadAllBytes(plan.Target).SequenceEqual(plan.Before))
+                    if (!File.ReadAllBytes(Path.Combine(originalFonts, plan.Family, "FontDataPA.xml")).SequenceEqual(plan.GameBefore))
                         throw new IOException("Font XML changed during preparation. Restart to retry.");
                 WriteAtomically(Path.Combine(transaction, "pending"), System.Text.Encoding.UTF8.GetBytes(string.Join("\n", changed.Select(p => p.Family))));
                 try
@@ -146,7 +168,7 @@ namespace Arstraea.KoreanPatch.Fonts
                 RejectLinks(target);
                 RejectLinks(Path.Combine(transaction, family + ".before"));
                 RejectLinks(Path.Combine(transaction, family + ".after"));
-                byte[] current = File.ReadAllBytes(target);
+                byte[] current = File.Exists(target) ? File.ReadAllBytes(target) : new byte[0];
                 byte[] before = File.ReadAllBytes(Path.Combine(transaction, family + ".before"));
                 byte[] after = File.ReadAllBytes(Path.Combine(transaction, family + ".after"));
                 if (!current.SequenceEqual(before) && !current.SequenceEqual(after))
@@ -156,7 +178,8 @@ namespace Arstraea.KoreanPatch.Fonts
             {
                 string target = Path.Combine(fonts, family, "FontDataPA.xml");
                 byte[] before = File.ReadAllBytes(Path.Combine(transaction, family + ".before"));
-                if (!File.ReadAllBytes(target).SequenceEqual(before)) WriteAtomically(target, before);
+                if (before.Length == 0) File.Delete(target);
+                else if (!File.ReadAllBytes(target).SequenceEqual(before)) WriteAtomically(target, before);
             }
             File.Delete(marker);
             CleanTransaction(transaction);
@@ -191,6 +214,7 @@ namespace Arstraea.KoreanPatch.Fonts
         }
         private static void WriteAtomically(string path, byte[] bytes)
         {
+            Directory.CreateDirectory(Path.GetDirectoryName(path));
             string temporary = FilePaths.Temporary(path);
             try
             {

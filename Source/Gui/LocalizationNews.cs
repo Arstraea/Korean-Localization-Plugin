@@ -123,22 +123,22 @@ namespace Arstraea.KoreanPatch.Gui
                 float half = (size.Y - 0.024f - 0.008f) * 0.5f;
                 float contentTop = -size.Y * 0.5f + 0.012f
                     + MyGuiManager.GetNormalizedSizeFromScreenSize(new Vector2(0f, -8f)).Y;
-                Section("한글화 팩 업데이트 정보", releases.Pack, contentTop, half, size.X, flushTop: true);
-                Section("플러그인 업데이트 정보", releases.Plugin, contentTop + half + 0.008f, half, size.X);
+                Section(KoreanText.PackNewsHeading, releases.Pack, contentTop, half, size.X, flushTop: true);
+                Section(KoreanText.PluginNewsHeading, releases.Plugin, contentTop + half + 0.008f, half, size.X);
                 // 실제 화면의 픽셀 보정값을 GUI 좌표로 변환해 버튼 행만 이동한다.
                 //
                 // Convert the requested screen-pixel offset for the action row only.
                 Vector2 right = topLeft + new Vector2(size.X, size.Y + 0.006f)
                     + MyGuiManager.GetNormalizedSizeFromScreenSize(new Vector2(4f, 6f));
                 toggle = new MyGuiControlButton(position: right, visualStyle: MyGuiControlButtonStyleEnum.Small,
-                    buttonScale: 0.65f, text: new StringBuilder("한글화 소식 보기"), textScale: 0.45f,
+                    buttonScale: 0.65f, text: new StringBuilder(KoreanText.ShowLocalizationNews), textScale: 0.45f,
                     originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP,
                     onButtonClick: ignored => Show(!ShowingKorean));
                 float extraHeight = MyGuiManager.GetNormalizedSizeFromScreenSize(new Vector2(0f, 6f)).Y;
                 toggle.Size = new Vector2(toggle.Size.X * 1.5f, toggle.Size.Y + extraHeight);
                 confirm = new MyGuiControlButton(position: right - new Vector2(toggle.Size.X + 0.008f, 0f),
                     visualStyle: MyGuiControlButtonStyleEnum.Small, buttonScale: 0.65f,
-                    text: new StringBuilder("확인"), textScale: 0.45f,
+                    text: new StringBuilder(KoreanText.Confirm), textScale: 0.45f,
                     originAlign: MyGuiDrawAlignEnum.HORISONTAL_RIGHT_AND_VERTICAL_TOP, onButtonClick: Confirm);
                 confirm.Size = new Vector2(confirm.Size.X * 1.5f, confirm.Size.Y + extraHeight);
                 // 구성 완료 후에만 화면에 추가해 생성 실패가 메뉴에 잔여 컨트롤을 남기지 않게 한다.
@@ -163,7 +163,7 @@ namespace Arstraea.KoreanPatch.Gui
                     textScale: 0.70f, font: "White", colorMask: new Color(92, 209, 229).ToVector4(),
                     originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
                     maxWidth: 0.16f, isAutoScaleEnabled: true, minimumTextScale: 0.6f));
-                Metadata(release == null ? "" : "버전: " + release.Version, right, y, width);
+                Metadata(release == null ? "" : string.Format(KoreanText.NewsVersion, release.Version), right, y, width);
                 float twoPixels = MyGuiManager.GetNormalizedSizeFromScreenSize(new Vector2(0f, 2f)).Y;
                 Metadata(release?.PublishedDate?.ToString("yyyy-MM-dd", CultureInfo.InvariantCulture) ?? "", right, y + 0.014f - twoPixels, width);
                 string text = FormatBody(release);
@@ -189,7 +189,7 @@ namespace Arstraea.KoreanPatch.Gui
                 panel.Visible = korean;
                 confirm.Visible = korean;
                 toggle.Visible = !korean || restoreGameNews;
-                toggle.Text = korean ? "게임 소식 보기" : "한글화 소식 보기";
+                toggle.Text = korean ? KoreanText.ShowGameNews : KoreanText.ShowLocalizationNews;
                 if (restoreGameNews) gameNews.Visible = !korean;
                 // 감춰진 버튼이 키보드 포커스를 붙잡지 않게 한다.
                 // Do not let a hidden action retain keyboard focus.
@@ -214,12 +214,12 @@ namespace Arstraea.KoreanPatch.Gui
 
         internal static string FormatBody(ReleaseMetadata release)
         {
-            if (release == null) return "업데이트 내역을 불러올 수 없습니다.";
+            if (release == null) return KoreanText.NewsUnavailable;
             string items = release.Changes == null || release.Changes.Length == 0 ? ""
                 : "* " + string.Join("\n* ", release.Changes);
             if (!string.IsNullOrEmpty(release.Introduction))
                 return release.Introduction + (items.Length == 0 ? "" : "\n\n" + items);
-            return items.Length == 0 ? "등록된 업데이트 내역이 없습니다." : items;
+            return items.Length == 0 ? KoreanText.NewsEmpty : items;
         }
     }
 }

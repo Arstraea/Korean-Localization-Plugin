@@ -20,15 +20,16 @@ namespace Arstraea.KoreanPatch.Fonts
         private sealed class Prepared { internal string Path; }
         private static readonly object Gate = new object();
         private static ConditionalWeakTable<object, Prepared> prepared = new ConditionalWeakTable<object, Prepared>();
-        private static string content, cache, outline;
+        private static string content, cache, outline, preparedFonts;
         internal static string Status { get; private set; } = DiagnosticText.ModFont("Build Info", "inactive; fonts not prepared.");
 
-        internal static void Configure(string gameContent, string cacheFolder = null, string patchFolder = null)
+        internal static void Configure(string gameContent, string cacheFolder = null, string patchFolder = null, string fontsFolder = null)
         {
             lock (Gate)
             {
                 content = Path.GetFullPath(gameContent);
-                cache = cacheFolder ?? Path.Combine(Path.GetDirectoryName(FontStartup.SettingsPath), "Fonts", "BuildInfo");
+                preparedFonts = fontsFolder ?? Path.Combine(content, "Fonts");
+                cache = cacheFolder ?? PluginPaths.ModSupportFor(PluginPaths.CacheFor(content), "BuildInfo");
                 outline = patchFolder == null ? null : Path.Combine(Path.GetFullPath(patchFolder), "Fonts", "white_outline", "FontDataPA.xml");
                 prepared = new ConditionalWeakTable<object, Prepared>();
                 Status = DiagnosticText.ModHookReady("Build Info", ReleaseId + "/" + TestId, "BI_Monospace/BI_SEOutlined");
@@ -56,7 +57,7 @@ namespace Arstraea.KoreanPatch.Fonts
                     // Separate the outline for small BI text from general UI. Older packages retain legacy donors.
                     bool dedicated = outline != null && File.Exists(outline);
                     string donor = dedicated ? outline
-                        : Path.Combine(content, "Fonts", name == "BI_Monospace" ? "monospace" : "white_shadow", "FontDataPA.xml");
+                        : Path.Combine(preparedFonts, name == "BI_Monospace" ? "monospace" : "white_shadow", "FontDataPA.xml");
                     int added;
                     byte[] xml = Merge(source, donor, name, out added);
                     string digest;

@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.Diagnostics;
 using System.Drawing;
@@ -64,10 +65,10 @@ namespace Arstraea.KoreanPatch.Fonts
             content.Controls.Add(new TextPairPanel(stageTitle, stageText, 23, 23, 23, 73) { Margin = new Padding(0, 5, 0, 0) });
 
             var errorHeading = new Panel { Height = 25, Dock = DockStyle.Fill, Margin = new Padding(0, 0, 0, 6) };
-            var title = sectionTitle = Label("오류 상세", true, 0);
+            var title = sectionTitle = Label(KoreanText.ErrorDetails, true, 0);
             title.Dock = DockStyle.None;
             title.Location = new Point(0, 3);
-            copy = new Button { Text = "내역 복사", Font = copyFont, Size = new Size(76, 23), Margin = Padding.Empty };
+            copy = new Button { Text = KoreanText.CopyDetails, Font = copyFont, Size = new Size(76, 23), Margin = Padding.Empty };
             errorHeading.Controls.Add(title);
             errorHeading.Controls.Add(copy);
             errorHeading.Layout += (sender, args) =>
@@ -111,11 +112,11 @@ namespace Arstraea.KoreanPatch.Fonts
             buttons.ColumnStyles.Add(new ColumnStyle(SizeType.Percent, 100));
             buttons.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
             buttons.ColumnStyles.Add(new ColumnStyle(SizeType.AutoSize));
-            var workshop = Button("한글화 팩 창작마당 열기");
+            var workshop = Button(KoreanText.OpenWorkshop);
             workshop.Anchor = AnchorStyles.Top | AnchorStyles.Left;
             workshop.Margin = Padding.Empty;
-            run = Button("무시하고 실행");
-            cancel = Button("종료");
+            run = Button(KoreanText.IgnoreAndRun);
+            cancel = Button(KoreanText.Exit);
             countdown = Label("", false, 0);
             countdown.Font = detailFont;
             countdown.TextAlign = ContentAlignment.MiddleRight;
@@ -133,19 +134,19 @@ namespace Arstraea.KoreanPatch.Fonts
             copy.Click += (sender, args) =>
             {
                 if (this.failure == null) { session?.RequestRefresh(); return; }
-                try { copyReport(this.failure.ReportText); feedback.Text = "패치 단계와 오류 상세를 함께 복사했습니다."; }
+                try { copyReport(this.failure.ReportText); feedback.Text = KoreanText.FailureReportCopied; }
                 catch (Exception error)
                 {
-                    feedback.Text = "복사하지 못했습니다. 잠시 후 [내역 복사]를 다시 눌러 주세요.";
+                    feedback.Text = KoreanText.FailureReportCopyFailed;
                     PatchStartupGate.WriteLog("Could not copy failure report: " + error);
                 }
             };
             workshop.Click += (sender, args) =>
             {
-                try { openPage(WorkshopUrl); feedback.Text = "창작마당 페이지를 여는 요청을 보냈습니다."; }
+                try { openPage(WorkshopUrl); feedback.Text = KoreanText.WorkshopOpenRequested; }
                 catch (Exception error)
                 {
-                    feedback.Text = "페이지를 열지 못했습니다. Steam 창작마당에서 Korean Localization Pack 한글화 팩(1843839106)을 찾아 주세요.";
+                    feedback.Text = KoreanText.WorkshopOpenFailed;
                     PatchStartupGate.WriteLog("Could not open Workshop page: " + error);
                 }
             };
@@ -179,25 +180,25 @@ namespace Arstraea.KoreanPatch.Fonts
                 bool failed = failure != null;
                 bool completed = view.IsComplete;
                 bool stopping = session != null && (session.ExitRequested || (session.StopRequested && !failed));
-                intro.Text = failed || completed ? view.Message : "게임을 시작하기 전에 한글화 팩 자료를 준비합니다.";
-                stageTitle.Text = failed ? "오류가 발생한 패치 단계" : "현재 진행 중인 패치 단계";
+                intro.Text = failed || completed ? view.Message : KoreanText.PreparationIntro;
+                stageTitle.Text = failed ? KoreanText.FailedStageHeading : KoreanText.CurrentStageHeading;
                 var titleColor = failed ? Color.FromArgb(UiTextColors.SoftRedR, UiTextColors.SoftRedG, UiTextColors.SoftRedB) : Color.FromArgb(0x5C, 0xD1, 0xE5);
                 stageTitle.ForeColor = sectionTitle.ForeColor = questionTitle.ForeColor = titleColor;
                 stageText.Text = "▶ " + PatchStages.Display(view.Stage);
-                sectionTitle.Text = failed ? "오류 상세" : "준비 상태";
+                sectionTitle.Text = failed ? KoreanText.ErrorDetails : KoreanText.PreparationStatusHeading;
                 details.Visible = failed;
                 progressPanel.Visible = !failed;
                 if (failed) details.Text = failure.Details;
                 guidance.Text = view.Guidance;
-                copy.Text = failed ? "내역 복사" : "다시 확인";
+                copy.Text = failed ? KoreanText.CopyDetails : KoreanText.CheckAgain;
                 copy.Enabled = failed || (view.IsWaiting && !stopping);
                 copy.Visible = !completed;
-                run.Text = failed ? "무시하고 실행" : completed ? "지금 게임 시작" : "대기 중단";
+                run.Text = failed ? KoreanText.IgnoreAndRun : completed ? KoreanText.StartGameNow : KoreanText.StopWaiting;
                 run.Enabled = !stopping && (failed || completed || view.IsWaiting);
                 cancel.Enabled = session == null || !session.ExitRequested;
-                questionTitle.Text = failed ? "오류를 무시하고 게임을 실행할까요?" : completed ? "준비가 완료되었습니다." : "준비가 완료되면 자동으로 계속 진행합니다.";
-                questionText.Text = failed ? "패치가 일부 적용되지 않거나 정상적으로 동작하지 않을 수 있습니다.\n이 선택은 이번 실행에만 적용됩니다."
-                    : "패치가 완료되면 게임이 실행됩니다.\n종료를 선택해도 Steam 다운로드 자체는 취소하지 않습니다.";
+                questionTitle.Text = failed ? KoreanText.IgnoreErrorQuestion : completed ? KoreanText.PreparationCompleteTitle : KoreanText.ContinueAfterPreparation;
+                questionText.Text = failed ? KoreanText.IgnoreErrorWarning
+                    : KoreanText.PreparationExitHint;
                 if (!failed)
                 {
                     var item = view.Download;
@@ -212,7 +213,7 @@ namespace Arstraea.KoreanPatch.Fonts
                             + (item.Total / 1048576.0).ToString("0.0") + " MiB";
                     }
                     else progressBar.Percent = completed ? 100 : 0;
-                    progressText.Text = stopping ? "중단 요청을 받았습니다. 진행 중인 적용·복구가 끝날 때까지 기다려 주세요." : view.Message + number;
+                    progressText.Text = stopping ? KoreanText.StopRequested : view.Message + number;
                 }
                 TickProgress(session?.Elapsed ?? TimeSpan.Zero);
             }
@@ -226,15 +227,15 @@ namespace Arstraea.KoreanPatch.Fonts
             if (view.IsComplete)
             {
                 int remaining = (int)Math.Max(0, Math.Ceiling(((view.LaunchAt ?? (elapsed + PatchSession.CompletionDelay)) - elapsed).TotalSeconds));
-                questionText.Text = remaining + "초 후 이 창이 자동으로 닫히고 게임이 실행됩니다.";
+                questionText.Text = string.Format(KoreanText.LaunchCountdown, remaining);
                 countdown.Text = "";
                 progressBar.Advance();
                 return;
             }
             bool waiting = view.IsWaiting && !(session?.ExitRequested ?? false) && !(session?.StopRequested ?? false);
             int seconds = (int)Math.Max(0, Math.Ceiling((view.NextCheck - elapsed).TotalSeconds));
-            countdown.Text = !waiting ? "" : seconds == 0 ? "상태를 다시 확인하는 중…"
-                : seconds + (view.Download.Subscribed ? "초 후 다운로드 상태 재확인" : "초 후 구독 여부 재확인");
+            countdown.Text = !waiting ? "" : seconds == 0 ? KoreanText.CheckingStatus
+                : string.Format(view.Download.Subscribed ? KoreanText.DownloadCountdown : KoreanText.SubscriptionCountdown, seconds);
             progressBar.Advance();
         }
 

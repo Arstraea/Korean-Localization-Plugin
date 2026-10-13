@@ -173,7 +173,7 @@ namespace Arstraea.KoreanPatch.Fonts
             sbyte.Parse(Attr(g, "lsb"), CultureInfo.InvariantCulture);
             if (g.Attribute("ho") != null) sbyte.Parse(Attr(g, "ho"), CultureInfo.InvariantCulture);
         }
-        private static void ValidateDds(byte[] bytes, string size)
+        internal static void ValidateDds(byte[] bytes, string size)
         {
             int[] dimensions = Pair(size, 'x');
             if (bytes.Length < 128 || bytes[0] != 'D' || bytes[1] != 'D' || bytes[2] != 'S' || bytes[3] != ' '

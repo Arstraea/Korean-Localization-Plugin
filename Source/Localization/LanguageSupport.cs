@@ -43,6 +43,7 @@ namespace Arstraea.KoreanPatch.Localization
                     throw new InvalidOperationException("Korean language ID/culture is already occupied; leaving existing registration intact.");
 
                 Type language = Assembly.Load("VRage.Game").GetType("VRage.Game.Localization.MyLanguage", true);
+                TranslationLoader.Install(pending, prepared);
                 supportedLanguages = AccessTools.Field(language, "m_supportedLanguages") ?? throw new MissingFieldException("m_supportedLanguages");
                 pending.Patch(Require(language, "Init"), postfix: Hook(nameof(InitPostfix)));
                 pending.Patch(Require(language, "ConvertLangEnum", typeof(MyLanguagesEnum)), prefix: Hook(nameof(ToCulturePrefix)));
@@ -50,7 +51,7 @@ namespace Arstraea.KoreanPatch.Localization
                 // 커뮤니티 번역으로 등록한다. OS가 한국어라는 이유만으로 최초 언어를 바꾸지 않는다.
                 // Mark as community localization so OS culture alone does not select it as an official default.
                 Require(typeof(MyTexts), "AddLanguage", typeof(MyLanguagesEnum), typeof(string), typeof(string),
-                    typeof(string), typeof(float), typeof(bool)).Invoke(null, new object[] { Korean, "ko", "KR", "한국어 by Arstraea", 1f, true });
+                    typeof(string), typeof(float), typeof(bool)).Invoke(null, new object[] { Korean, "ko", "KR", KoreanText.LanguageName, 1f, true });
                 registered = true;
                 pending.Unpatch(ConfigGetter(), AccessTools.Method(typeof(LanguageSupport), nameof(UnavailableConfigPostfix)));
                 harmony = pending;

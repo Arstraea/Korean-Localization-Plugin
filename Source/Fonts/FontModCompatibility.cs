@@ -7,10 +7,10 @@ using HarmonyLib;
 
 namespace Arstraea.KoreanPatch.Fonts
 {
-    // 확인된 모드의 폰트 Path만 연결한다. 정의나 원본 파일을 수정하지 않아
+    // 게임 기본 폰트와 확인된 모드의 폰트 Path만 연결한다. 정의나 원본 파일을 수정하지 않아
     // 다른 월드/모드의 정의와 섞이지 않고, 측정·렌더가 동일한 경로를 받는다.
     //
-    // Redirect only recognized mods' font Path getters. Leave definitions/files intact
+    // Redirect stock and recognized mods' font Path getters. Leave definitions/files intact
     // so measurement and rendering agree without leaking changes across worlds.
     internal static class FontModCompatibility
     {
@@ -22,16 +22,18 @@ namespace Arstraea.KoreanPatch.Fonts
         private static FieldInfo contextField, itemId, itemService;
         private static PropertyInfo contextItem, contextPath;
         private static readonly int[] reported = new int[3];
+        private static string gameContent;
+        private static bool redirectStock;
 
         // 폰트 적용 성공 후, 게임의 폰트 초기화가 JIT되기 전에 설치한다.
         // Install after successful preparation, before game font callers can be JIT-inlined.
-        internal static void Install(string content)
+        internal static void Install(string content, string preparedFonts = null, string cacheFolder = null)
         {
             if (harmony != null) return;
             var prepared = new string[FontInstaller.Families.Length];
             for (int i = 0; i < prepared.Length; i++)
             {
-                prepared[i] = Path.GetFullPath(Path.Combine(content, "Fonts", FontInstaller.Families[i], "FontDataPA.xml"));
+                prepared[i] = Path.GetFullPath(Path.Combine(preparedFonts ?? Path.Combine(content, "Fonts"), FontInstaller.Families[i], "FontDataPA.xml"));
                 if (!File.Exists(prepared[i])) throw new FileNotFoundException("Prepared font XML is unavailable.", prepared[i]);
             }
             var pending = new Harmony(PatchId);
@@ -50,7 +52,10 @@ namespace Arstraea.KoreanPatch.Fonts
                 if (getter == null || getter.IsStatic || getter.ReturnType != typeof(string))
                     throw new MissingMethodException(font.FullName, "get_CompatibilityPath");
                 targets = prepared;
-                BuildInfoFontSupport.Configure(content, patchFolder: FontStartup.PackageFolder);
+                gameContent = Path.GetFullPath(content);
+                redirectStock = preparedFonts != null;
+                BuildInfoFontSupport.Configure(content, cacheFolder == null ? null : PluginPaths.ModSupportFor(cacheFolder, "BuildInfo"),
+                    cacheFolder ?? FontStartup.CacheFolder, preparedFonts);
                 pending.Patch(getter, postfix: new HarmonyMethod(typeof(FontModCompatibility), nameof(PathPostfix)) { priority = Priority.Last });
                 harmony = pending;
                 Status = DiagnosticText.ModHookReady("Korean Font", WorkshopId.ToString(), "white/white_shadow/monospace");
@@ -70,10 +75,28 @@ namespace Arstraea.KoreanPatch.Fonts
 
         private static void PathPostfix(object __instance, ref string __result)
         {
+            // CompatibilityPath는 Init/UseLanguage/InitFont가 모두 최초 MyFont 생성
+            // 전에 읽는다. 기본 Resources 경로도 여기서 연결해 측정과 렌더를 일치시킨다.
+            //
+            // All three consumers query CompatibilityPath before creating their font.
+            // Redirect stock Resources here too, so first measurement and render agree.
+            if (redirectStock && targets != null)
+            {
+                var definition = (VRage.Game.Definitions.MyFontDefinition)__instance;
+                if (definition.Context != null && definition.Context.IsBaseGame)
+                {
+                    string requested = string.IsNullOrEmpty(__result)
+                        ? definition.Resources == null ? null : System.Linq.Enumerable.FirstOrDefault(definition.Resources)?.Path
+                        : __result;
+                    int stock = MatchFamily(gameContent, requested);
+                    if (stock >= 0) { __result = targets[stock]; return; }
+                }
+            }
             if (targets == null || string.IsNullOrEmpty(__result)) return;
             object context = contextField.GetValue(__instance);
             if (context == null) return;
             object item = contextItem.GetValue(context);
+            if (item == null) return;
             if (!string.Equals(itemService.GetValue(item) as string, "Steam", StringComparison.OrdinalIgnoreCase)) return;
             ulong origin = (ulong)itemId.GetValue(item);
             string root = contextPath.GetValue(context) as string;

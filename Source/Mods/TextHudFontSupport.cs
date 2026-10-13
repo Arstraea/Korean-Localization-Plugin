@@ -97,7 +97,7 @@ namespace Arstraea.KoreanPatch.Mods
             attempted = true;
             try
             {
-                data = Read(Path.Combine(MyFileSystem.ContentPath, "Fonts", "white"));
+                data = Read(Path.Combine(Fonts.FontStartup.PreparedFonts ?? Path.Combine(MyFileSystem.ContentPath, "Fonts"), "white"));
                 Report("data prepared; Hangul glyphs=" + data.Glyphs.Count + "; shared DDS=" + data.Images.Count + ".");
             }
             catch (Exception error)

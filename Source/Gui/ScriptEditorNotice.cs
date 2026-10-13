@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.Reflection;
 using HarmonyLib;
@@ -47,7 +48,7 @@ namespace Arstraea.KoreanPatch.Gui
             float screenBottom = __instance.Size.Value.Y * 0.5f;
             var notice = new MyGuiControlLabel(
                 position: new Vector2(___m_descriptionBackgroundPanel.Position.X, (buttonBottom + screenBottom) * 0.5f),
-                text: "한글화 플러그인 설정으로 인해 편집기 내에서의 한글 입력이 제한됩니다.",
+                text: KoreanText.ScriptEditorNotice,
                 colorMask: new Color(UiTextColors.SoftRedR, UiTextColors.SoftRedG, UiTextColors.SoftRedB).ToVector4(),
                 textScale: 0.65f, font: "White", originAlign: MyGuiDrawAlignEnum.HORISONTAL_LEFT_AND_VERTICAL_CENTER,
                 maxWidth: ___m_descriptionBackgroundPanel.Size.X, isAutoScaleEnabled: true, minimumTextScale: 0.45f);

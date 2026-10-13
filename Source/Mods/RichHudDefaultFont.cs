@@ -86,8 +86,8 @@ namespace Arstraea.KoreanPatch.Mods
             attempted = true;
             try
             {
-                prepared = RichHudFontData.Load(Fonts.FontStartup.PackageFolder,
-                    System.IO.Path.Combine(MyFileSystem.ContentPath, "Fonts", "white"));
+                prepared = RichHudFontData.LoadCached(Fonts.FontStartup.CacheFolder,
+                    System.IO.Path.Combine(Fonts.FontStartup.PreparedFonts ?? System.IO.Path.Combine(MyFileSystem.ContentPath, "Fonts"), "white"));
                 Report("data prepared; Hangul glyphs=" + prepared.Font.Item3[0].Item5.Length
                     + "; shared DDS=" + prepared.ImagePaths.Length + ".");
             }

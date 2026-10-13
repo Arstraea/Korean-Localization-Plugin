@@ -1,27 +1,25 @@
 using System;
 using System.Collections.Generic;
 using System.IO;
-using System.Security.Cryptography;
 using System.Text;
 using System.Xml.Linq;
 
 namespace Arstraea.KoreanPatch.Localization
 {
     // 사용자 옵션과 분리해 저장하여 설정창 저장으로 배포 이력이 사라지지 않게 한다.
-    // 게임 설치 경로별로 구분하고 본문/전체 번역은 보관하지 않는다.
+    // 설치 경로는 XML에만 기록해 PC 교체 후에도 같은 확인 이력을 읽는다.
     //
-    // Keep per-installation release state separate from user options, so saving settings
-    // cannot erase it. Never persist a second translation catalog here.
+    // Keep release state separate from options, so saving settings cannot erase it.
+    // Store the installation path as metadata; keep acknowledgements across PC moves.
     internal sealed class TranslationState
     {
         internal string LastSeenVersion, InstalledVersion, LastNotifiedVersion, LastConfirmedPluginVersion;
+        internal string GameContentPath;
 
         internal static string PathFor(string content)
         {
-            string canonical = Path.GetFullPath(content).TrimEnd(Path.DirectorySeparatorChar, Path.AltDirectorySeparatorChar).ToUpperInvariant();
-            string key;
-            using (var hash = SHA256.Create()) key = BitConverter.ToString(hash.ComputeHash(Encoding.UTF8.GetBytes(canonical))).Replace("-", "");
-            return Path.Combine(Path.GetDirectoryName(Fonts.FontStartup.SettingsPath), "Installations", key, "localization-state.xml");
+            PluginPaths.RequireExternal(content, PluginPaths.Root);
+            return Path.Combine(PluginPaths.CacheFor(content), "localization-state.xml");
         }
 
         internal static TranslationState Load(string path, List<string> notes)
@@ -32,7 +30,7 @@ namespace Arstraea.KoreanPatch.Localization
                 var root = ReleaseMetadata.ReadXml(path);
                 if (root.Name != "KoreanPatchTranslationState" || (string)root.Attribute("schemaVersion") != "1")
                     throw new InvalidDataException("Unsupported translation state schema.");
-                return new TranslationState { LastSeenVersion = Value(root, "LastSeenVersion"),
+                return new TranslationState { GameContentPath = Value(root, "GameContentPath"), LastSeenVersion = Value(root, "LastSeenVersion"),
                     InstalledVersion = Value(root, "InstalledVersion"), LastNotifiedVersion = Value(root, "LastNotifiedVersion"),
                     LastConfirmedPluginVersion = Value(root, "LastConfirmedPluginVersion") };
             }
@@ -57,13 +55,14 @@ namespace Arstraea.KoreanPatch.Localization
                 var root = new XElement("KoreanPatchTranslationState", new XAttribute("schemaVersion", "1"),
                     new XElement("LastSeenVersion", LastSeenVersion ?? ""), new XElement("InstalledVersion", InstalledVersion ?? ""),
                     new XElement("LastNotifiedVersion", LastNotifiedVersion ?? ""));
+                if (GameContentPath != null) root.Add(new XElement("GameContentPath", GameContentPath));
                 if (LastConfirmedPluginVersion != null)
                     root.Add(new XElement("LastConfirmedPluginVersion", LastConfirmedPluginVersion));
                 string xml = root.ToString();
                 if (File.Exists(path) && File.ReadAllText(path) == xml) return;
-                // 새 메타데이터가 없으면 비어 있는 추적 파일을 굳이 만들지 않는다.
-                // Older packages need no empty bookkeeping file.
-                if (!File.Exists(path) && LastSeenVersion == null && InstalledVersion == null && LastNotifiedVersion == null
+                // 설치 경로·배포 기록이 모두 없으면 빈 추적 파일을 굳이 만들지 않는다.
+                // Skip an empty file when neither source path nor release bookkeeping is available.
+                if (!File.Exists(path) && GameContentPath == null && LastSeenVersion == null && InstalledVersion == null && LastNotifiedVersion == null
                     && LastConfirmedPluginVersion == null) return;
                 temporary = FilePaths.Temporary(path);
                 Directory.CreateDirectory(Path.GetDirectoryName(path));

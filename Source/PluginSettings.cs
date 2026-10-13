@@ -15,8 +15,7 @@ namespace Arstraea.KoreanPatch
         internal InputLanguagePolicy InputLanguage = InputLanguagePolicy.EnglishExceptChat;
         internal bool VanillaScriptEditor = true;
         internal static PluginSettings Current { get; private set; } = new PluginSettings();
-        internal static string PathForSettings => Path.Combine(Environment.GetFolderPath(
-            Environment.SpecialFolder.LocalApplicationData), "Arstraea", "KoreanPatch", "settings.xml");
+        internal static string PathForSettings => Path.Combine(PluginPaths.Root, "settings.xml");
 
         internal static PluginSettings Read(string path)
         {
@@ -37,7 +36,11 @@ namespace Arstraea.KoreanPatch
             return value;
         }
 
-        internal static void Load() { Current = Read(PathForSettings); }
+        internal static void Load()
+        {
+            PluginPaths.RequireWritableRoot();
+            Current = Read(PathForSettings);
+        }
 
         internal static void Write(string path, PluginSettings value)
         {
@@ -57,6 +60,7 @@ namespace Arstraea.KoreanPatch
 
         internal static void Save(PluginSettings value)
         {
+            PluginPaths.RequireWritableRoot();
             Write(PathForSettings, value);
             Current = value;
             Fonts.FontStartup.HidePlatformIcons = value.HidePlatformIcons;

@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System.Runtime.CompilerServices;
 using Arstraea.KoreanPatch.Input;
 using VRage.Plugins;
@@ -8,7 +9,7 @@ namespace Arstraea.KoreanPatch
     public sealed class Plugin : IPlugin
     {
         internal const string DisplayName = "Korean Localization Plugin";
-        internal const string DisplayTitle = DisplayName + " - 한글화 플러그인 by Arstraea";
+        internal const string DisplayTitle = KoreanText.PluginTitle;
         private bool clientInitialized;
 
         // Init은 창 생성 이후다. 여기서 초기 패치를 뒤늦게 재시도하지 않는다.

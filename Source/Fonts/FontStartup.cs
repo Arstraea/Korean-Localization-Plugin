@@ -1,3 +1,4 @@
+using Arstraea.KoreanPatch.Localization;
 using System;
 using System.IO;
 using System.Linq;
@@ -19,8 +20,9 @@ namespace Arstraea.KoreanPatch.Fonts
         internal static bool? LaunchAllowed { get; private set; }
         internal static bool HidePlatformIcons = true;
         internal static Localization.TranslationInstaller.Result TranslationResult { get; private set; }
-        internal static string PackageFolder { get; private set; }
         internal static string ContentFolder { get; private set; }
+        internal static string PreparedFonts { get; private set; }
+        internal static string CacheFolder { get; private set; }
         private static bool attempted;
         internal static string SettingsPath => PluginSettings.PathForSettings;
 
@@ -41,28 +43,41 @@ namespace Arstraea.KoreanPatch.Fonts
                 attempted = true;
                 ui = new PatchSession();
                 string bin = (string)configType.GetProperty("GameDir").GetValue(config);
+                PluginPaths.Configure(bin);
                 string content = GetContentPath(bin);
                 ContentFolder = content;
+                CacheFolder = PluginPaths.CacheFor(content);
+                PluginPaths.RequireExternal(content, PluginPaths.Root);
                 LoadSettings();
                 stage = PatchStage.Workshop;
                 ui.Publish(PatchView.Working(stage));
                 Type steam = pulsar.GetType("Pulsar.Shared.Steam", true);
                 if (!(bool)steam.GetProperty("IsInitialized").GetValue(null))
-                    throw new PatchPreparationException("Steam 연결 상태를 확인할 수 없어 한글화 팩 다운로드 대기를 계속할 수 없습니다.\n\nSteam을 실행하고 로그인한 뒤 게임과 Pulsar를 다시 실행해 주세요.");
+                    throw new PatchPreparationException(KoreanText.SteamNotInitialized);
                 Assembly steamworks = Assembly.Load("Steamworks.NET");
                 FontInstaller.Result result;
                 using (var source = new SteamWorkshopSource(steamworks))
                     result = PatchPreparation.Run(source, ui, (package, recheck, progress) =>
                     {
-                        TranslationResult = null;
-                        var fonts = FontInstaller.Apply(content, package.Folder, HidePlatformIcons, recheck, progress: progress);
-                        TranslationResult = Localization.TranslationInstaller.Apply(content, package.Folder,
-                            Localization.TranslationState.PathFor(content), recheck, progress);
-                        PackageFolder = package.Folder;
-                        return fonts;
+                        // 전체 준비 동안 같은 캐시의 잠금을 유지한다. Steam 대기는 이 범위 밖이며
+                        // 보조 자료까지 준비한 뒤에만 번역의 준비 완료 버전을 기록한다.
+                        //
+                        // Hold the shared cache lock across preparation, never across Steam waits.
+                        // Record the prepared translation version only after auxiliary assets are ready.
+                        progress(PatchStage.AccessAndRecovery);
+                        using (FontInstallGuard.Acquire(CacheFolder))
+                        {
+                            TranslationResult = null;
+                            var fonts = FontInstaller.Apply(content, package.Folder, HidePlatformIcons, recheck, progress: progress, cacheFolder: CacheFolder);
+                            AuxiliaryFontCache.Prepare(package.Folder, CacheFolder, recheck);
+                            TranslationResult = Localization.TranslationInstaller.Apply(content, package.Folder,
+                                Localization.TranslationState.PathFor(content), recheck, progress, cacheFolder: CacheFolder);
+                            PreparedFonts = fonts.FontsFolder;
+                            return fonts;
+                        }
                     },
                         () => ui.Elapsed, ui.Wait);
-                FontModCompatibility.Install(content);
+                FontModCompatibility.Install(content, PreparedFonts, CacheFolder);
                 Status = "Fonts: ready; XML changed=" + result.ChangedXml + ", DDS copied=" + result.CopiedImages
                     + ", Hangul glyphs=" + result.HangulCount + ", platform icons hidden=" + HidePlatformIcons + ".";
                 if (result.OriginalIconsUnavailable) Status += " Original icon metrics were already missing; verify game files before showing icons.";

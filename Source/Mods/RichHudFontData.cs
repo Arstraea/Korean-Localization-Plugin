@@ -17,7 +17,8 @@ namespace Arstraea.KoreanPatch.Mods
     // Read precomputed data only; never reconvert game XML or generate images at runtime.
     internal sealed class RichHudFontData
     {
-        internal const string RelativePath = "Korean Patch Plugin/RichHudMaster/SpaceEngineers.Hangul.xml";
+        internal const string FileName = "SpaceEngineers.Hangul.xml";
+        internal const string RelativePath = "Korean Patch Plugin/RichHudMaster/" + FileName;
         internal Font Font;
         internal string[] ImagePaths;
 
@@ -29,8 +30,18 @@ namespace Arstraea.KoreanPatch.Mods
             // Use Workshop data only so local DLL and source distribution behave alike.
             // Report missing/corrupt data before suppressing the legacy font mod.
             if (string.IsNullOrEmpty(package)) throw new FileNotFoundException("Korean Localization Pack location is unavailable for RichHud font support.");
-            string external = FilePaths.Read(Path.Combine(package, RelativePath.Replace('/', Path.DirectorySeparatorChar)));
-            using (var stream = File.OpenRead(external)) return Read(stream, installedWhite);
+            return LoadFile(Path.Combine(package, RelativePath.Replace('/', Path.DirectorySeparatorChar)), installedWhite);
+        }
+
+        internal static RichHudFontData LoadCached(string cache, string installedWhite)
+        {
+            if (string.IsNullOrEmpty(cache)) throw new FileNotFoundException("Prepared font cache is unavailable for RichHud font support.");
+            return LoadFile(Path.Combine(PluginPaths.ModSupportFor(cache, "RichHudMaster"), FileName), installedWhite);
+        }
+
+        private static RichHudFontData LoadFile(string path, string installedWhite)
+        {
+            using (var stream = File.OpenRead(FilePaths.Read(path))) return Read(stream, installedWhite);
         }
 
         internal static RichHudFontData Read(Stream stream, string installedWhite)
