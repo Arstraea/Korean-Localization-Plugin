@@ -345,9 +345,9 @@ namespace Arstraea.KoreanPatch.Localization
     }
 
     #region GeneratedPluginNews
-    // 자동 생성: 뉴스는 Dev/Assets/PluginVersion.xml에서 영어 번역 주석과 함께 수정한다.
+    // 자동 생성: 프로젝트 폴더 기준 Assets/PluginVersion.xml에서 뉴스와 영어 번역 주석을 수정한다.
     //
-    // Generated: edit news and English translation comments in Dev/Assets/PluginVersion.xml.
+    // Generated: edit news and English translation comments in Assets/PluginVersion.xml, relative to the project directory.
     internal static class PluginNews
     {
         // Select "Korean" as the language in the game settings!

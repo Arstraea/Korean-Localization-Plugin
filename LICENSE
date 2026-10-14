@@ -1,0 +1,71 @@
+Korean Localization Plugin - Limited Use License
+Version 1.0
+
+Copyright (c) 2026 Arstraea, to the extent applicable rights exist.
+
+1. Scope
+
+This license applies only to the original plugin code, build scripts and
+accompanying project documentation made available by Arstraea in the
+Korean Localization Plugin source repository (the "Software"), and only
+to rights that Arstraea is entitled to grant.
+
+It does not apply to Space Engineers, Pulsar, referenced libraries,
+Korean Localization Pack assets, fonts, font-derived data or other
+third-party materials. Those materials retain their own copyrights and
+licenses. In particular, font licenses, including SIL OFL 1.1 for
+NanumBarunGothic-derived font data, take precedence for the font materials.
+The restrictions below must not be applied to limit rights granted by
+those original licenses.
+
+2. Permitted use
+
+You may download, inspect, and make local copies of the unmodified Software
+free of charge; compile and cache it, including through Pulsar; and install
+and run it for personal, non-commercial use with a legally obtained copy
+of Space Engineers. Reviewers may inspect, compile and test it when
+evaluating its registration and compatibility with Pulsar.
+
+Normal compiler and loader transformations needed to build, cache and run
+the unmodified source are permitted. They are not considered a prohibited
+modification under this license.
+
+3. Uses requiring permission
+
+Without prior written permission from Arstraea, you may not modify the
+Software, redistribute its source or binaries (modified or unmodified),
+reuse its code in another project, sell or sublicense it, or reuse it
+commercially, including as part of a paid product or service.
+
+The redistribution permission requirement also covers uploading or
+mirroring the original, unmodified DLL at another distribution location.
+
+These restrictions concern the Software and its reuse or distribution.
+They do not separately restrict gameplay screenshots, videos or streams
+that do not redistribute its code or binaries. Game and platform terms
+still apply to such content.
+
+4. Existing rights and third-party terms
+
+Nothing here limits rights granted by applicable law, GitHub's service
+terms (including viewing and forking through GitHub), or third-party
+licenses. This license grants no rights in third-party materials and
+does not replace the game's or loader's terms. It does not assert
+exclusive rights over ideas, functionality or material that is not
+protected by applicable law.
+
+Retain this license and applicable copyright notices in copies made
+under the permissions granted above. Rights not expressly granted are
+reserved only to the extent held by Arstraea.
+
+5. Disclaimer
+
+To the extent permitted by applicable law, the Software is provided
+"AS IS", without warranties of any kind. Arstraea is not liable for
+loss or damage arising from its use. Nothing here excludes liabilities
+or rights that cannot lawfully be excluded.
+
+For permission requests, contact Arstraea through the project's GitHub
+repository or the Korean Localization Pack Workshop page:
+https://github.com/Arstraea/Korean-Localization-Plugin
+https://steamcommunity.com/sharedfiles/filedetails/?id=1843839106

@@ -35,8 +35,8 @@
     <Reference Include="SharpDX.Desktop"><HintPath>$(GameBinPath)/SharpDX.Desktop.dll</HintPath><Private>false</Private></Reference>
   </ItemGroup>
   <Target Name="CheckLocalReferences" BeforeTargets="ResolveReferences">
-    <Error Condition="!Exists('$(GameBinPath)/VRage.dll')" Text="Set GameBinPath to the installed game's Bin64 directory (or use Dev/Build.ps1)." />
-    <Error Condition="!Exists('$(HarmonyPath)')" Text="Set HarmonyPath to the selected Pulsar runtime's 0Harmony.dll (or use Dev/Build.ps1)." />
+    <Error Condition="!Exists('$(GameBinPath)/VRage.dll')" Text="Set GameBinPath to the installed game's Bin64 directory (or use the Build.ps1 beside this project)." />
+    <Error Condition="!Exists('$(HarmonyPath)')" Text="Set HarmonyPath to the selected Pulsar runtime's 0Harmony.dll (or use the Build.ps1 beside this project)." />
     <Error Condition="!Exists('$(CecilPath)')" Text="Set CecilPath to the selected Pulsar runtime's Mono.Cecil.dll." />
   </Target>
 </Project>
