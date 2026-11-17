@@ -24,6 +24,23 @@ namespace Arstraea.KoreanPatch.Localization
         // Confirm
         internal const string Confirm = "확인";
 
+        // The original is being displayed as translated text.
+        internal const string DatapadTranslationNotice = "원문을 번역된 문장으로 표시 중입니다.";
+
+        // Save datapad changes
+        internal const string DatapadSaveTitle = "저장 확인";
+
+        // This datapad uses localization keys to display text in the reader's selected language.
+        // Saving changes prevents the edited fields from adapting to other readers' languages.
+        internal const string DatapadSaveExplanation = "이 데이터패드는 텍스트가 아닌 번역 키가 저장되어 있어, 열람한 사람의 사용 언어에 맞춰 표시되고 있습니다.\n"
+            + "내용을 수정하고 저장하면, 번역 키가 사라지고 수정된 내용 자체가 저장되므로 다른 사용자의 언어에 맞춰 표시되지 않게 됩니다.";
+
+        // Korean characters may appear corrupted in environments without Korean display support.
+        internal const string DatapadSaveWarning = "한글이 포함된 경우, 한글을 사용하지 않는 유저가 열람 시 글자가 깨져 보이게 됩니다.\n(외국인이거나, 한글화를 적용 중이지 않은 사람 등)";
+
+        // Do you want to save?
+        internal const string DatapadSaveQuestion = "저장하시겠습니까?";
+
         // 설정 / Settings
 
         // Korean input support settings
@@ -353,10 +370,11 @@ namespace Arstraea.KoreanPatch.Localization
         // Select "Korean" as the language in the game settings!
         // Korean text input + options for remembering Korean/English input state
         // Automatically add Korean fonts to TextHudAPI, RichHudMaster, and Build Info
+        // Add translated datapad display and original-content protection
         internal const string Xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <KoreanPatchRelease schemaVersion=""1"">
-  <Version>1.0.1</Version>
-  <PublishedAt>2026-10-12</PublishedAt>
+  <Version>1.1.0</Version>
+  <PublishedAt>2026-11-17</PublishedAt>
   <!-- Select ""Korean"" as the language in the game settings! -->
   <Introduction>게임 설정에서 언어를 ""한국어""로 변경하세요!</Introduction>
   <Changes>
@@ -364,6 +382,8 @@ namespace Arstraea.KoreanPatch.Localization
     <Change>한글 입력 지원 + 한/영 입력 상태 기억 옵션 제공</Change>
     <!-- Automatically add Korean fonts to TextHudAPI, RichHudMaster, and Build Info -->
     <Change>TextHudAPI · RichHudMaster · Build Info 한글 폰트 자동 추가</Change>
+    <!-- Add translated datapad display and original-content protection -->
+    <Change>데이터패드에 번역 표시 및 원문 보호 기능 추가</Change>
   </Changes>
 </KoreanPatchRelease>
 ";

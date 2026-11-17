@@ -9,8 +9,10 @@ Steam 창작마당의 [Korean Localization Pack 한글화 팩](https://steamcomm
 - 한/영 입력 상태 기억 방식과 스크립트 코드 편집기의 한글 입력 제한을 설정할 수 있습니다.
 - TextHudAPI · RichHudMaster · Build Info에 한글 폰트를 보충합니다.
 - 메인 메뉴에서 적용된 한글화 팩과 플러그인의 업데이트 내역을 확인할 수 있습니다.
+- 번역 키를 사용하는 데이터패드를 수정 없이 확인하면 원문을 보존하며, 수정 내용을 저장할 때 확인 안내를 표시합니다.
+- 영어 서버의 거래소 GPS 안내 데이터패드 9종을 한국어로 표시하고 거래소 이름·GPS 값을 유지합니다.
 
-현재 버전은 **1.0.1**입니다. Pulsar 플러그인 목록에는 **1.0.1.0**으로 표시됩니다. [PluginHub 등록 PR](https://github.com/StarCpt/PluginHub/pull/216)은 승인·병합되었습니다.
+공개 소스 버전은 **1.1.0**입니다. Pulsar 플러그인 목록에는 **1.1.0.0**으로 표시됩니다. PluginHub는 등록 XML에 지정된 커밋을 사용하므로 허브 업데이트가 승인되기 전에는 이전 버전이 제공됩니다.
 
 ## Requirements
 
@@ -18,7 +20,7 @@ Steam 창작마당의 [Korean Localization Pack 한글화 팩](https://steamcomm
 - [Pulsar](https://github.com/SpaceGT/Pulsar)의 Legacy / CLR 런타임
 - Steam 창작마당 Korean Localization Pack (1843839106) 구독 및 다운로드
 
-PluginHub 등록안은 한글화 팩을 숨김 의존성으로 연결합니다. 등록이 승인되면 플러그인을 활성화하고 Apply를 누를 때 Pulsar가 팩 구독을 요청합니다. 로컬 DLL 설치에서는 시작 전 매니저가 구독·다운로드 상태를 안내하며, 허브 설치에서도 다운로드가 진행 중이거나 준비 오류가 있으면 같은 매니저를 사용합니다.
+PluginHub는 한글화 팩을 숨김 의존성으로 연결합니다. 플러그인을 활성화하고 Apply를 누르면 Pulsar가 팩 구독을 요청합니다. 로컬 DLL 설치에서는 시작 전 매니저가 구독·다운로드 상태를 안내하며, 허브 설치에서도 다운로드가 진행 중이거나 준비 오류가 있으면 같은 매니저를 사용합니다.
 
 클라이언트 전용 플러그인입니다. 멀티플레이 서버에 설치할 필요가 없으며 전용 서버 호스트에서는 처리를 생략합니다. Interim/CoreCLR 및 다른 플랫폼은 현재 지원 검증 범위에 포함하지 않습니다.
 

@@ -24,6 +24,7 @@ namespace Arstraea.KoreanPatch.Localization
             internal bool Available => PrimaryFiles > 0;
             internal readonly List<string> Notes = new List<string>();
             internal ReleaseMetadata Release;
+            internal EconomyDatapadCatalog EconomyDatapads = EconomyDatapadCatalog.Empty;
             internal string Summary => "Korean translations: files=" + InstalledFiles + ", copied=" + CopiedFiles
                 + ", version=" + (Release?.Version ?? "unknown") + "."
                 + (Notes.Count == 0 ? "" : "\n" + string.Join("\n", Notes));
@@ -118,6 +119,10 @@ namespace Arstraea.KoreanPatch.Localization
                 // merging refresh restored cache data; this path only describes the prepared source.
                 state.GameContentPath = Path.GetFullPath(content);
                 state.SaveIfChanged(statePath, result.Notes);
+                // 기존 이름 파일은 대조용 18개 항목만 읽으며 게임 번역 로더에 넣지 않는다.
+                //
+                // Read only 18 source entries; never load the manual-install RESX into MyTexts.
+                result.EconomyDatapads = EconomyDatapadCatalog.Load(Path.Combine(sourceRoot, "MyTexts.resx"), result.Notes);
                 return result;
             }
         }

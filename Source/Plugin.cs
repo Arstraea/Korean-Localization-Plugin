@@ -32,6 +32,7 @@ namespace Arstraea.KoreanPatch
             ImeControlPolicy.InstallSessionHooks();
             Gui.RichTextSpacing.Install();
             Gui.ScriptEditorNotice.Install();
+            Gui.DatapadProtection.Install();
             Gui.LocalizationNews.Install();
             MyLog.Default.WriteLine("[Arstraea.KoreanPatch] " + ImeBootstrap.Status);
             MyLog.Default.WriteLine("[Arstraea.KoreanPatch] " + Fonts.FontStartup.Status);
