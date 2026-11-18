@@ -27,15 +27,17 @@ namespace Arstraea.KoreanPatch.Localization
         // The original is being displayed as translated text.
         internal const string DatapadTranslationNotice = "원문을 번역된 문장으로 표시 중입니다.";
 
-        // Save datapad changes
+        // Save confirmation
         internal const string DatapadSaveTitle = "저장 확인";
 
-        // This datapad uses localization keys to display text in the reader's selected language.
-        // Saving changes prevents the edited fields from adapting to other readers' languages.
+        // This datapad stores localization keys rather than text, so its contents are displayed in the reader's selected language.
+        // Editing and saving replaces the affected localization keys with the edited text itself,
+        // preventing those fields from adapting to other readers' languages.
         internal const string DatapadSaveExplanation = "이 데이터패드는 텍스트가 아닌 번역 키가 저장되어 있어, 열람한 사람의 사용 언어에 맞춰 표시되고 있습니다.\n"
             + "내용을 수정하고 저장하면, 번역 키가 사라지고 수정된 내용 자체가 저장되므로 다른 사용자의 언어에 맞춰 표시되지 않게 됩니다.";
 
-        // Korean characters may appear corrupted in environments without Korean display support.
+        // If Korean is included, readers who do not use Korean will see garbled characters.
+        // Examples include foreign players and people who have not applied Korean localization.
         internal const string DatapadSaveWarning = "한글이 포함된 경우, 한글을 사용하지 않는 유저가 열람 시 글자가 깨져 보이게 됩니다.\n(외국인이거나, 한글화를 적용 중이지 않은 사람 등)";
 
         // Do you want to save?
