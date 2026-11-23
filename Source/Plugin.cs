@@ -39,6 +39,7 @@ namespace Arstraea.KoreanPatch
             MyLog.Default.WriteLine("[Arstraea.KoreanPatch] " + Fonts.FontModCompatibility.Status);
             MyLog.Default.WriteLine("[Arstraea.KoreanPatch] " + Localization.LanguageSupport.Status);
             MyLog.Default.WriteLine("[Arstraea.KoreanPatch] Input hooks: Unicode pump=" + UnicodeMessagePump.Installed
+                + ", bounded game pump=" + UnicodeMessagePump.BoundedPumpInstalled
                 + "; detailed tracing=" + ImeDiagnostics.Enabled);
             if (ImeBootstrap.CompositionHookInstalled) ImeStartupPreparation.Arm();
             if (!ImeBootstrap.WindowInitialized)

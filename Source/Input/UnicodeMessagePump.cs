@@ -11,16 +11,17 @@ using System.Windows.Forms;
 namespace Arstraea.KoreanPatch.Input
 {
     // 게임의 Unicode 창을 ANSI 메시지 루프로 처리하면 한글 WM_CHAR가 바이트로
-    // 분리된다. 게임 루프의 세 호출만 Unicode로 연결하고 필터/순서/렌더는 유지한다.
+    // 분리된다. 실제 게임 루프를 Unicode로 연결하고 필터/순서/렌더는 유지한다.
     //
     // ANSI retrieval splits Korean WM_CHAR for Unicode windows. Replace only the
-    // game's three pump calls, retaining filtering, ordering and rendering behavior.
+    // game's active pump, retaining filtering, ordering and rendering behavior.
     internal static class UnicodeMessagePump
     {
         private static Type gameFormType;
         private static int announced;
         [ThreadStatic] private static bool enabled;
         internal static bool Installed { get; private set; }
+        internal static bool BoundedPumpInstalled { get; private set; }
         private static int formsAnnounced;
         private struct PumpScope
         {
@@ -30,6 +31,25 @@ namespace Arstraea.KoreanPatch.Input
 
         internal static void Plan(PatchTransaction transaction)
         {
+            // 새 게임 루프는 SharpDX를 거치지 않는다. 두 경로 모두 같은 창 범위에서
+            // 준비 작업을 수행하되 새 루프의 메시지 예산과 마우스 이동 분리는 유지한다.
+            //
+            // New game versions bypass SharpDX. Scope both paths to the game window,
+            // retaining the new pump's message budget and separate mouse-move drain.
+            Type pump = Assembly.Load("VRage.Platform.Windows").GetType("VRage.Platform.Windows.Forms.MyMessagePump");
+            if (pump != null)
+            {
+                FieldInfo owner = AccessTools.Field(pump, "m_control");
+                MethodInfo frame = ProcessorAccess.RequireMethod(pump, "Pump", typeof(bool));
+                MethodInfo drain = AccessTools.DeclaredMethod(pump, "Drain", new[] { typeof(uint), typeof(uint), typeof(int) });
+                if (owner == null || owner.IsStatic || owner.FieldType != typeof(Control)
+                    || drain == null || !drain.IsStatic || drain.ReturnType != typeof(int))
+                    throw new MissingMemberException(pump.FullName, "bounded message pump contract");
+                transaction.Add(frame,
+                    prefix: new HarmonyMethod(typeof(UnicodeMessagePump), nameof(BoundedPrefix)),
+                    finalizer: new HarmonyMethod(typeof(UnicodeMessagePump), nameof(BoundedFinalizer)));
+                transaction.Add(drain, prefix: new HarmonyMethod(typeof(UnicodeMessagePump), nameof(DrainPrefix)));
+            }
             var target = ProcessorAccess.RequireMethod(typeof(RenderLoop), "NextFrame", typeof(bool));
             transaction.Add(target,
                 prefix: new HarmonyMethod(typeof(UnicodeMessagePump), nameof(Prefix)),
@@ -40,7 +60,45 @@ namespace Arstraea.KoreanPatch.Input
         internal static void Commit(Type formType)
         {
             gameFormType = formType;
+            BoundedPumpInstalled = formType.Assembly.GetType("VRage.Platform.Windows.Forms.MyMessagePump") != null;
             Installed = true;
+        }
+
+        private static void BoundedPrefix(Control ___m_control, out bool __state)
+        {
+            __state = enabled;
+            enabled = gameFormType != null && gameFormType.IsInstanceOfType(___m_control);
+            if (!enabled) return;
+            ImeStartupPreparation.OnFrame(___m_control);
+            if (System.Threading.Interlocked.Exchange(ref announced, 1) == 0)
+                ImeDiagnostics.Record("unicode-pump-active", health: true, metadata: "path=MyMessagePump bounded=True");
+        }
+
+        private static void BoundedFinalizer(bool __state) { enabled = __state; }
+
+        private static bool DrainPrefix(uint __0, uint __1, int __2, ref int __result)
+        {
+            if (!enabled) return true;
+            int count = 0;
+            NativeMessage native;
+            while (count < __2 && PeekMessage(out native, IntPtr.Zero, unchecked((int)__0), unchecked((int)__1), 1) != 0)
+            {
+                count++;
+                Message message = Message.Create(native.handle, unchecked((int)native.msg), native.wParam, native.lParam);
+                if (FilterMessage(ref message)) continue;
+                // 새 루프에는 WinForms 키 전처리가 없다. 우리 비편집 수신부에만
+                // 적용해 Ctrl/Enter/메뉴 문자에 대한 기존 정책을 유지한다.
+                //
+                // The bounded loop omits WinForms key preprocessing. Apply it only to
+                // our non-editing receiver to retain Ctrl/Enter/menu-character policy.
+                var receiver = message.Msg >= 0x100 && message.Msg <= 0x109
+                    ? Control.FromHandle(message.HWnd) as ImeReceiver : null;
+                if (receiver != null && receiver.PreProcessMessage(ref message)) continue;
+                TranslateMessage(ref native);
+                DispatchMessage(ref native);
+            }
+            __result = count;
+            return false;
         }
 
         private static void Prefix(RenderLoop __instance, out PumpScope __state)
@@ -172,5 +230,6 @@ namespace Arstraea.KoreanPatch.Input
         [DllImport("user32.dll", ExactSpelling = true, SetLastError = true)] private static extern int GetMessageA(out NativeMessage message, IntPtr window, int first, int last);
         [DllImport("user32.dll", ExactSpelling = true)] private static extern IntPtr DispatchMessageW(ref NativeMessage message);
         [DllImport("user32.dll", ExactSpelling = true)] private static extern IntPtr DispatchMessageA(ref NativeMessage message);
+        [DllImport("user32.dll", ExactSpelling = true)] [return: MarshalAs(UnmanagedType.Bool)] private static extern bool TranslateMessage(ref NativeMessage message);
     }
 }

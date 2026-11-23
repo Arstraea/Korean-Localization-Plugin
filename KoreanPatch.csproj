@@ -6,6 +6,7 @@
     <AssemblyName>Arstraea.KoreanPatch</AssemblyName>
     <RootNamespace>Arstraea.KoreanPatch</RootNamespace>
     <Version>1.1.0</Version>
+    <AssemblyVersion>1.1.0.1</AssemblyVersion>
     <GenerateAssemblyVersionAttribute>false</GenerateAssemblyVersionAttribute>
     <GenerateAssemblyFileVersionAttribute>false</GenerateAssemblyFileVersionAttribute>
     <GenerateAssemblyInformationalVersionAttribute>false</GenerateAssemblyInformationalVersionAttribute>

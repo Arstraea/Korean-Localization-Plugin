@@ -373,10 +373,11 @@ namespace Arstraea.KoreanPatch.Localization
         // Korean text input + options for remembering Korean/English input state
         // Automatically add Korean fonts to TextHudAPI, RichHudMaster, and Build Info
         // Add translated datapad display and original-content protection
+        // Bug fix 1 - Fix intermittent dropped Korean text input
         internal const string Xml = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <KoreanPatchRelease schemaVersion=""1"">
-  <Version>1.1.0</Version>
-  <PublishedAt>2026-11-17</PublishedAt>
+  <Version>1.1.0.1</Version>
+  <PublishedAt>2026-11-23</PublishedAt>
   <!-- Select ""Korean"" as the language in the game settings! -->
   <Introduction>게임 설정에서 언어를 ""한국어""로 변경하세요!</Introduction>
   <Changes>
@@ -386,6 +387,8 @@ namespace Arstraea.KoreanPatch.Localization
     <Change>TextHudAPI · RichHudMaster · Build Info 한글 폰트 자동 추가</Change>
     <!-- Add translated datapad display and original-content protection -->
     <Change>데이터패드에 번역 표시 및 원문 보호 기능 추가</Change>
+    <!-- Bug fix 1 - Fix intermittent dropped Korean text input -->
+    <Change>버그 수정 1 - 한글 입력이 종종 씹히던 문제 수정</Change>
   </Changes>
 </KoreanPatchRelease>
 ";
